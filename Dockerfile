@@ -20,10 +20,10 @@
 FROM ubuntu:12.10
 MAINTAINER Roberto G. Hashioka "roberto_hashioka@hotmail.com"
 
-RUN apt-get update
-
 # Set the env variable DEBIAN_FRONTEND to noninteractive
 ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update
 
 # Installing the environment required: xserver, xdm, flux box, roc-filer and ssh
 RUN apt-get install -y xpra rox-filer ssh pwgen xserver-xephyr xdm fluxbox
@@ -46,15 +46,30 @@ RUN apt-get -y install fuse  || :
 RUN rm -rf /var/lib/dpkg/info/fuse.postinst
 RUN apt-get -y install fuse
 
-# Installing the apps: Firefox, flash player plugin, LibreOffice and xterm
-# libreoffice-base installs libreoffice-java mentioned before
-RUN apt-get install -y libreoffice-base firefox libreoffice-gtk libreoffice-calc xterm ubuntu-restricted-extras 
+# Installing the apps: jdk and xterm
+RUN apt-get install -y openjdk-7-jre icedtea-plugin xterm ubuntu-restricted-extras 
+
+# Install FF18
+RUN apt-get install -y curl 
+RUN curl -o /opt/firefox.tar.bz2 https://ftp.mozilla.org/pub/mozilla.org/firefox/releases/18.0.2/linux-x86_64/en-US/firefox-18.0.2.tar.bz2
+RUN tar -C /opt -xjf /opt/firefox.tar.bz2
+RUN ln -sf /opt/firefox/firefox /usr/bin/firefox
+
+# Adding updated xpra
+RUN curl http://xpra.org/gpg.asc | apt-key add -
+RUN echo "deb http://xpra.org/ quantal main" > /etc/apt/sources.list.d/xpra.list;
+RUN apt-get update
+RUN apt-get install -y xpra
 
 # Set locale (fix the locale warnings)
 RUN localedef -v -c -i en_US -f UTF-8 en_US.UTF-8 || :
 
 # Copy the files into the container
 ADD . /src
+
+# make sure ff doesn't auto-update
+RUN mkdir -p /opt/firefox/defaults/profile
+RUN cp /src/prefs.js /opt/firefox/defaults/profile
 
 EXPOSE 22
 # Start xdm and ssh services.

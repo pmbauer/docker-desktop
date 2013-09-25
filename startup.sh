@@ -15,7 +15,14 @@ adduser docker sudo
 chsh -s /bin/bash docker
 
 # Copy the config files into the docker directory
-cd /src; tar -C /home/docker -xvf config.tar
+cp -ra /src/config/. /home/docker
+
+mkdir /home/docker/.ssh
+cat /src/id_rsa.pub >> /home/docker/.ssh/authorized_keys
+
+chmod 700 /home/docker/.ssh
+chmod 640 /home/docker/.ssh/authorized_keys
+chown -R docker:docker /home/docker/.ssh
 
 #Set all the files and subdirectories from /home/docker with docker permissions. 
 chown -R docker:docker /home/docker/*
